@@ -16,10 +16,10 @@ const countryListRef = document.querySelector(".country-list");
 inputRef.addEventListener('input', debounce(onInput, DEBOUNCE_DELAY));
 
 function onInput(e) {
+  clearCountryList();
   const countryName = e.target.value.trim();
 
   if (countryName === '') {
-    clearCountryList();
     return;
   }
   API.fetchCountries(countryName)
@@ -28,11 +28,9 @@ function onInput(e) {
 
     if (numberOfCountries > 10) Notify.info("Too many matches found. Please enter a more specific name.");
     else if (numberOfCountries >= 2 && numberOfCountries <= 10) {
-      clearCountryList();
       renderCountryList(countryCards);
     }
     else if (numberOfCountries === 1) {
-      clearCountryList();
       renderCountryInfo(countryCards);
     }
     }) 
