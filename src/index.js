@@ -6,82 +6,51 @@ import countryListTpl from './templates/country-list.hbs';
 import API from "./fetchCountries.js";
 
 
-const DEBOUNCE_DELAY = 700;
+const DEBOUNCE_DELAY = 300;
+
 const inputRef = document.getElementById("search-box");
+const countryInfoRef = document.querySelector(".country-info");
+const countryListRef = document.querySelector(".country-list");
+
 
 inputRef.addEventListener('input', debounce(onInput, DEBOUNCE_DELAY));
 
 function onInput(e) {
   const countryName = e.target.value.trim();
-  console.log(countryName);
+
   if (countryName === '') {
     clearCountryList();
     return;
   }
   API.fetchCountries(countryName)
     .then(countryCards => {
-    console.log('countryCards :>> ', countryCards);
-
     const numberOfCountries = countryCards.length;
-    console.log('numberOfCountries :>> ', numberOfCountries);
 
-    // if (numberOfCountries === 0) throw new Error("No data");
     if (numberOfCountries > 10) Notify.info("Too many matches found. Please enter a more specific name.");
     else if (numberOfCountries >= 2 && numberOfCountries <= 10) {
       clearCountryList();
-      const countryListMarkup = countryCards.reduce(
-        (markup, card) => createCountryListMarkup(card) + markup, ""
-      );
-      updateCountryList(countryListMarkup);
+      renderCountryList(countryCards);
     }
     else if (numberOfCountries === 1) {
       clearCountryList();
-      const countryInfoMarkup = countryCards.reduce(
-        (markup, card) => createCountryInfoMarkup(card) + markup, ""
-      );
-      console.log('countryInfoMarkup :>> ', countryInfoMarkup);
-      updateCountryInfo(countryInfoMarkup);
-      console.log('countryInfoTpl :>> ', countryInfoTpl(countryCards[0]));
+      renderCountryInfo(countryCards);
     }
     }) 
   .catch(onFetchError);
 }
-
-function createCountryListMarkup({name, flags}) {
-  return `
-      <li class="item">
-      <img class="flag" src="${flags.svg}" alt="flag" width="20">
-        ${name.common}
-      </li>
-      `;
+function renderCountryInfo(card) {
+  const markup = countryInfoTpl(card);
+    countryInfoRef.innerHTML = markup;
 }
-
-function createCountryInfoMarkup({name, capital, population, flags, languages }) {
-  return `
-      <h1 class="country-title">
-        <img class="flag" src="${flags.svg}" alt="flag" width="30">
-        ${name.official}
-      </h1>
-      <p class="parameter"><b>Capital: </b>${capital}</p>
-      <p class="parameter"><b>Population: </b>${population}</p>
-      <p class="parameter"><b>Languages: </b>${Object.values(languages)}</p>
-    `;
-}
-function updateCountryInfo(markup) {
-  document
-    .querySelector(".country-info")
-    .innerHTML = markup;
-}
-function updateCountryList(markup) {
-  document
-    .querySelector(".country-list")
-    .innerHTML = markup;
+function renderCountryList(card) {
+  const markup = countryListTpl(card);
+    countryListRef.innerHTML = markup;
 }
 function clearCountryList() {
-  document.querySelector(".country-list").innerHTML = "";
-  document.querySelector(".country-info").innerHTML = "";
+  countryListRef.innerHTML = "";
+  countryInfoRef.innerHTML = "";
 }
-
 function onFetchError(error) {
+  console.log('error :>> ', error);
   Notify.failure("Oops, there is no country with that name")
 }
